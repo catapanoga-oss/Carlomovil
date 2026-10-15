@@ -526,44 +526,47 @@
         }
 
         function procesarArchivoCSV(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+    const file = e.target.files[0];
+    if (!file) return;
 
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                const lineas = evt.target.result.split('\n');
-                let nuevoCatalogo = [];
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        const texto = evt.target.result;
+        const lineas = texto.split(/\r\n|\n/);
+        let nuevoCatalogo = [];
 
-                lineas.forEach((linea, index) => {
-                    if (index === 0 || !linea.trim()) return; // Ignorar cabecera o líneas vacías
-                    const cols = linea.split(',');
-                    
-                    if (cols.length >= 5) {
-                        nuevoCatalogo.push({
-                            id: Date.now() + index,
-                            codigo: cols[0].trim(),
-                            nombre: cols[1].trim(),
-                            categoria: cols[2].trim(),
-                            precio: parseFloat(cols[3]) || 0,
-                            stock: parseInt(cols[4]) || 0
-                        });
-                    }
+        lineas.forEach((linea, index) => {
+            if (index === 0 || !linea.trim()) return; // Ignorar encabezado o líneas vacías
+            
+            // Detectar si el separador es ';' (Excel en español) o ',' (estándar)
+            const separador = linea.includes(';') ? ';' : ',';
+            const cols = linea.split(separador);
+            
+            if (cols.length >= 5) {
+                nuevoCatalogo.push({
+                    id: Date.now() + index,
+                    codigo: cols[0].trim().replace(/^"|"$/g, ''),
+                    nombre: cols[1].trim().replace(/^"|"$/g, ''),
+                    categoria: cols[2].trim().replace(/^"|"$/g, ''),
+                    precio: parseFloat(cols[3].trim().replace(/^"|"$/g, '').replace(',', '.')) || 0,
+                    stock: parseInt(cols[4].trim().replace(/^"|"$/g, '')) || 0
                 });
+            }
+        });
 
-                if (nuevoCatalogo.length > 0) {
-                    catalogo = nuevoCatalogo;
-                    guardarEstado();
-                    renderizarCategorias();
-                    renderizarCatalogo();
-                    alert(`¡Éxito! Se cargaron ${nuevoCatalogo.length} productos desde la planilla.`);
-                    cerrarModalInventario();
-                } else {
-                    alert("No se pudo leer la planilla. Verifique el formato CSV.");
-                }
-            };
-            reader.readAsText(file);
+        if (nuevoCatalogo.length > 0) {
+            catalogo = nuevoCatalogo;
+            guardarEstado();
+            renderizarCategorias();
+            renderizarCatalogo();
+            alert(`¡Éxito! Se cargaron ${nuevoCatalogo.length} productos desde la planilla.`);
+            cerrarModalInventario();
+        } else {
+            alert("No se pudieron leer los productos. Verifique que la planilla tenga 5 columnas: Codigo, Nombre, Categoria, Precio, Stock.");
         }
-
+    };
+    reader.readAsText(file, 'UTF-8');
+}
         function cargarCatalogoPredeterminado() {
             catalogo = [...CATALOGO_INICIAL];
             guardarEstado();
