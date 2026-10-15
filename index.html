@@ -7,9 +7,7 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Deshabilitar selección de texto para agilizar toque táctil en móviles */
         .touch-none { touch-action: manipulation; user-select: none; }
-        /* Ocultar barra de scroll para interfaz limpia */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -124,27 +122,20 @@
                 </div>
                 
                 <div class="p-4 overflow-y-auto flex flex-col gap-4 text-xs">
-                    <!-- Total General -->
                     <div class="bg-indigo-50 border border-indigo-100 p-3 rounded-xl text-center">
                         <span class="text-indigo-600 font-bold block uppercase text-[10px] tracking-wider">Total Recaudado en el Evento</span>
                         <span class="text-3xl font-extrabold text-indigo-950" id="rendicion-total-general">$0</span>
                         <span class="block text-[10px] text-indigo-400 mt-1" id="rendicion-total-ops">0 operaciones realizadas</span>
                     </div>
 
-                    <!-- Desglose por Vendedor -->
                     <div>
                         <h4 class="font-bold text-slate-700 mb-2 uppercase text-[10px] tracking-wider">Recaudación por Vendedor</h4>
-                        <div class="flex flex-col gap-1.5" id="desglose-vendedores">
-                            <!-- JS inyecta desglose -->
-                        </div>
+                        <div class="flex flex-col gap-1.5" id="desglose-vendedores"></div>
                     </div>
 
-                    <!-- Registro de Últimas Ventas -->
                     <div>
                         <h4 class="font-bold text-slate-700 mb-2 uppercase text-[10px] tracking-wider">Historial de Operaciones</h4>
-                        <div class="max-h-36 overflow-y-auto border rounded-xl divide-y text-[11px]" id="lista-historial-ventas">
-                            <!-- JS inyecta historial -->
-                        </div>
+                        <div class="max-h-36 overflow-y-auto border rounded-xl divide-y text-[11px]" id="lista-historial-ventas"></div>
                     </div>
                 </div>
 
@@ -156,27 +147,46 @@
             </div>
         </div>
 
-        <!-- MODAL DE GESTIÓN DE INVENTARIO / CSV -->
+        <!-- MODAL DE GESTIÓN DE INVENTARIO (CON PEGAR DIRECTO DESDE EXCEL) -->
         <div id="modal-inventario" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
                 <div class="bg-indigo-950 text-white p-4 flex justify-between items-center">
                     <h3 class="font-bold text-sm flex items-center gap-2">📦 Gestión de Inventario</h3>
                     <button onclick="cerrarModalInventario()" class="text-slate-400 hover:text-white font-bold text-sm">✕</button>
                 </div>
                 
                 <div class="p-4 overflow-y-auto flex flex-col gap-4 text-xs">
-                    <p class="text-slate-600">Puedes cargar una planilla en formato <strong>CSV</strong> exportada desde Google Sheets o Excel con las columnas: <code>Codigo, Nombre, Categoria, Precio, Stock</code>.</p>
-                    
-                    <input type="file" id="archivo-csv" accept=".csv" class="hidden" onchange="procesarArchivoCSV(event)">
-                    
-                    <button onclick="document.getElementById('archivo-csv').click()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl shadow transition text-center flex items-center justify-center gap-2">
-                        <span>📥 Cargar Planilla CSV</span>
-                    </button>
+                    <!-- Opción 1: Pegar desde Excel -->
+                    <div class="bg-indigo-50 border border-indigo-200 p-3 rounded-xl flex flex-col gap-2">
+                        <h4 class="font-bold text-indigo-900 text-sm">✨ Pegar directo desde Excel</h4>
+                        <p class="text-slate-600 text-[11px]">Selecciona tus filas en Excel (desde Código hasta Stock), cópialas (<kbd class="bg-white px-1 border rounded">Ctrl+C</kbd>) y pégalas aquí abajo:</p>
+                        
+                        <textarea id="textarea-excel" rows="4" placeholder="Haz clic aquí y presiona Ctrl + V para pegar la tabla..." 
+                            class="w-full bg-white border border-indigo-300 rounded-lg p-2 text-xs outline-none focus:border-indigo-600 font-mono"></textarea>
+                        
+                        <button onclick="importarDesdeTextoExcel()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl shadow transition text-center">
+                            🚀 Importar Productos Pegados
+                        </button>
+                    </div>
 
-                    <div class="border-t pt-3">
-                        <h4 class="font-bold text-slate-700 mb-2">Restablecer Catálogo Base</h4>
-                        <button onclick="cargarCatalogoPredeterminado()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 rounded-xl text-xs">
-                            Cargar Productos de Ejemplo
+                    <div class="relative flex py-1 items-center">
+                        <div class="flex-grow border-t border-slate-200"></div>
+                        <span class="flex-shrink mx-4 text-slate-400 text-[10px] uppercase font-bold">O también</span>
+                        <div class="flex-grow border-t border-slate-200"></div>
+                    </div>
+
+                    <!-- Opción 2: Archivo CSV -->
+                    <div class="flex flex-col gap-2">
+                        <input type="file" id="archivo-csv" accept=".csv" class="hidden" onchange="procesarArchivoCSV(event)">
+                        <button onclick="document.getElementById('archivo-csv').click()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl shadow transition text-center flex items-center justify-center gap-2">
+                            <span>📥 Subir archivo CSV</span>
+                        </button>
+                    </div>
+
+                    <div class="border-t pt-3 flex justify-between items-center">
+                        <span class="text-slate-500">¿Deseas volver al inicio?</span>
+                        <button onclick="cargarCatalogoPredeterminado()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-3 py-1.5 rounded-xl text-[11px]">
+                            Restablecer Predeterminados
                         </button>
                     </div>
                 </div>
@@ -187,7 +197,6 @@
 
     <!-- LÓGICA JAVASCRIPT -->
     <script>
-        // ESTADO GLOBAL DE LA APLICACIÓN
         const CATALOGO_INICIAL = [
             { id: 1, codigo: "101", nombre: "Vela Chica", categoria: "Velas", precio: 500, stock: 150 },
             { id: 2, codigo: "102", nombre: "Vela Grande", categoria: "Velas", precio: 1200, stock: 80 },
@@ -205,10 +214,8 @@
         let vendedorActual = "Vendedor 1";
         let categoriaSeleccionada = "TODAS";
 
-        // Canal de sincronización local entre pestañas/celulares conectados
         const canalSync = new BroadcastChannel('pos_kiosco_religioso');
 
-        // INICIALIZACIÓN
         window.onload = function() {
             cargarEstadoGuardado();
             configurarSincronizacion();
@@ -216,7 +223,6 @@
             renderizarCatalogo();
             renderizarCarrito();
 
-            // Evento Tecla Enter en Buscador para agregar directo
             document.getElementById('input-buscador').addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
                     let val = this.value.trim().toLowerCase();
@@ -229,7 +235,6 @@
             });
         };
 
-        // PERSISTENCIA Y SINCRONIZACIÓN
         function cargarEstadoGuardado() {
             const catGuardado = localStorage.getItem('kiosco_catalogo');
             const ventasGuardadas = localStorage.getItem('kiosco_ventas');
@@ -241,7 +246,6 @@
         function guardarEstado() {
             localStorage.setItem('kiosco_catalogo', JSON.stringify(catalogo));
             localStorage.setItem('kiosco_ventas', JSON.stringify(ventas));
-            // Notificar a otros dispositivos/pestañas
             canalSync.postMessage({ tipo: 'ACTUALIZACION_ESTADO', catalogo, ventas });
         }
 
@@ -255,7 +259,6 @@
             };
         }
 
-        // RENDERIZADO DE INTERFAZ
         function renderizarCategorias() {
             const categorias = ["TODAS", ...new Set(catalogo.map(p => p.categoria))];
             const cont = document.getElementById('contenedor-categorias');
@@ -327,7 +330,6 @@
             document.getElementById('vendedor-label').innerText = `Vendedor: ${vendedorActual}`;
         }
 
-        // LÓGICA DEL CARRITO
         function agregarAlCarrito(id) {
             const producto = catalogo.find(p => p.id === id);
             if (!producto || producto.stock <= 0) return;
@@ -370,7 +372,6 @@
             if (!item) return;
 
             const productoOriginal = catalogo.find(p => p.id === id);
-            
             item.cantidad += cambio;
 
             if (item.cantidad <= 0) {
@@ -426,13 +427,11 @@
             renderizarCarrito();
         }
 
-        // COBRO Y REGISTRO
         function procesarVenta() {
             if (carrito.length === 0) return;
 
             let totalVenta = carrito.reduce((acc, i) => acc + (i.precio * i.cantidad), 0);
 
-            // Descontar Stock
             carrito.forEach(itemCarrito => {
                 if (!itemCarrito.esMontoLibre) {
                     let prod = catalogo.find(p => p.id === itemCarrito.id);
@@ -440,7 +439,6 @@
                 }
             });
 
-            // Registrar Venta
             ventas.push({
                 id: Date.now(),
                 hora: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -455,7 +453,6 @@
             limpiarBuscador();
         }
 
-        // RENDICIÓN DE CAJA
         function abrirRendicion() {
             document.getElementById('modal-rendicion').classList.remove('hidden');
             
@@ -463,7 +460,6 @@
             document.getElementById('rendicion-total-general').innerText = `$${totalGeneral.toLocaleString()}`;
             document.getElementById('rendicion-total-ops').innerText = `${ventas.length} operaciones totales`;
 
-            // Desglose Vendedores
             const vendedores = ["Vendedor 1", "Vendedor 2", "Vendedor 3"];
             const contDesglose = document.getElementById('desglose-vendedores');
             contDesglose.innerHTML = '';
@@ -483,7 +479,6 @@
                 `;
             });
 
-            // Historial
             const contHistorial = document.getElementById('lista-historial-ventas');
             contHistorial.innerHTML = '';
 
@@ -516,7 +511,6 @@
             }
         }
 
-        // GESTIÓN DE INVENTARIO / CSV
         function abrirModalInventario() {
             document.getElementById('modal-inventario').classList.remove('hidden');
         }
@@ -525,48 +519,98 @@
             document.getElementById('modal-inventario').classList.add('hidden');
         }
 
-        function procesarArchivoCSV(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(evt) {
-        const texto = evt.target.result;
-        const lineas = texto.split(/\r\n|\n/);
-        let nuevoCatalogo = [];
-
-        lineas.forEach((linea, index) => {
-            if (index === 0 || !linea.trim()) return; // Ignorar encabezado o líneas vacías
-            
-            // Detectar si el separador es ';' (Excel en español) o ',' (estándar)
-            const separador = linea.includes(';') ? ';' : ',';
-            const cols = linea.split(separador);
-            
-            if (cols.length >= 5) {
-                nuevoCatalogo.push({
-                    id: Date.now() + index,
-                    codigo: cols[0].trim().replace(/^"|"$/g, ''),
-                    nombre: cols[1].trim().replace(/^"|"$/g, ''),
-                    categoria: cols[2].trim().replace(/^"|"$/g, ''),
-                    precio: parseFloat(cols[3].trim().replace(/^"|"$/g, '').replace(',', '.')) || 0,
-                    stock: parseInt(cols[4].trim().replace(/^"|"$/g, '')) || 0
-                });
+        // IMPORTAR DIRECTO DESDE LO COPIADO DE EXCEL (TABULACIONES)
+        function importarDesdeTextoExcel() {
+            const texto = document.getElementById('textarea-excel').value.trim();
+            if (!texto) {
+                alert("Por favor, pega los datos copiados de Excel en la caja de texto.");
+                return;
             }
-        });
 
-        if (nuevoCatalogo.length > 0) {
-            catalogo = nuevoCatalogo;
-            guardarEstado();
-            renderizarCategorias();
-            renderizarCatalogo();
-            alert(`¡Éxito! Se cargaron ${nuevoCatalogo.length} productos desde la planilla.`);
-            cerrarModalInventario();
-        } else {
-            alert("No se pudieron leer los productos. Verifique que la planilla tenga 5 columnas: Codigo, Nombre, Categoria, Precio, Stock.");
+            const lineas = texto.split('\n');
+            let nuevoCatalogo = [];
+
+            lineas.forEach((linea, index) => {
+                if (!linea.trim()) return;
+                
+                // Excel al copiar celdas separa las columnas con Tabulaciones (\t)
+                const cols = linea.split('\t');
+                
+                // Si la primera fila tiene la palabra "Codigo", la ignoramos (es la cabecera)
+                if (index === 0 && cols[0].toLowerCase().includes('codigo')) return;
+
+                if (cols.length >= 5) {
+                    let codigo = cols[0].trim();
+                    let nombre = cols[1].trim();
+                    let categoria = cols[2].trim();
+                    let precio = parseFloat(cols[3].trim().replace(/\./g, '').replace(',', '.')) || 0;
+                    let stock = parseInt(cols[4].trim()) || 0;
+
+                    nuevoCatalogo.push({
+                        id: Date.now() + index,
+                        codigo: codigo,
+                        nombre: nombre,
+                        categoria: categoria,
+                        precio: precio,
+                        stock: stock
+                    });
+                }
+            });
+
+            if (nuevoCatalogo.length > 0) {
+                catalogo = nuevoCatalogo;
+                guardarEstado();
+                renderizarCategorias();
+                renderizarCatalogo();
+                alert(`¡Éxito! Se importaron ${nuevoCatalogo.length} productos correctamente.`);
+                document.getElementById('textarea-excel').value = '';
+                cerrarModalInventario();
+            } else {
+                alert("No se pudieron reconocer los datos. Asegúrate de copiar las 5 columnas desde Excel (Código, Nombre, Categoría, Precio, Stock).");
+            }
         }
-    };
-    reader.readAsText(file, 'UTF-8');
-}
+
+        function procesarArchivoCSV(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const texto = evt.target.result;
+                const lineas = texto.split(/\r\n|\n/);
+                let nuevoCatalogo = [];
+
+                lineas.forEach((linea, index) => {
+                    if (index === 0 || !linea.trim()) return;
+                    const separador = linea.includes(';') ? ';' : ',';
+                    const cols = linea.split(separador);
+                    
+                    if (cols.length >= 5) {
+                        nuevoCatalogo.push({
+                            id: Date.now() + index,
+                            codigo: cols[0].trim().replace(/^"|"$/g, ''),
+                            nombre: cols[1].trim().replace(/^"|"$/g, ''),
+                            categoria: cols[2].trim().replace(/^"|"$/g, ''),
+                            precio: parseFloat(cols[3].trim().replace(/^"|"$/g, '').replace(',', '.')) || 0,
+                            stock: parseInt(cols[4].trim().replace(/^"|"$/g, '')) || 0
+                        });
+                    }
+                });
+
+                if (nuevoCatalogo.length > 0) {
+                    catalogo = nuevoCatalogo;
+                    guardarEstado();
+                    renderizarCategorias();
+                    renderizarCatalogo();
+                    alert(`¡Éxito! Se cargaron ${nuevoCatalogo.length} productos.`);
+                    cerrarModalInventario();
+                } else {
+                    alert("No se pudieron leer los productos del CSV.");
+                }
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
         function cargarCatalogoPredeterminado() {
             catalogo = [...CATALOGO_INICIAL];
             guardarEstado();
